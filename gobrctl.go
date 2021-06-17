@@ -5,14 +5,15 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // Bridge is a linux bridge.
 type Bridge struct {
-	Name      string
-	Id        string
-	Stp       bool
-	Interface string
+	Name       string
+	Id         string
+	Stp        bool
+	Interfaces []string
 }
 
 const sysClassNet = "/sys/class/net/"
@@ -51,13 +52,17 @@ func GetBridgeByName(name string) (Bridge, error) {
 	if exists(bridgeFolder) {
 		id, err := ioutil.ReadFile(bridgeFolder + "/bridge_id")
 		checkError(err)
-		bridge.Id = string(id)
+		bridge.Id = strings.TrimSpace(string(id))
 		stp, err := ioutil.ReadFile(bridgeFolder + "/stp_state")
 		checkError(err)
 		bridge.Stp = stp[0] == '1'
 		files, err := ioutil.ReadDir(sysClassNet + name + "/brif")
-		if err == nil && len(files) > 0 {
-			bridge.Interface = files[0].Name()
+		if err == nil {
+			interfaces := []string{}
+			for _, file := range files {
+				interfaces = append(interfaces, file.Name())
+			}
+			bridge.Interfaces = interfaces
 		}
 		return bridge, nil
 	}
