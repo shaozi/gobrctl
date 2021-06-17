@@ -1,3 +1,4 @@
+// Package gobrctl gets list of bridges in Linux the same way as `brctl show`.
 package gobrctl
 
 import (
@@ -6,6 +7,7 @@ import (
 	"os"
 )
 
+// Bridge is a linux bridge.
 type Bridge struct {
 	Name      string
 	Id        string
@@ -15,17 +17,22 @@ type Bridge struct {
 
 const sysClassNet = "/sys/class/net/"
 
+// checkError is a function that will panic if error is not nil.
 func checkError(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
 
+// exists is a simple check if a path exists.
+// Returns bool.
 func exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
+// GetInterfaceNames gets all interface names.
+// It returns an array of strings, each is an interface's name.
 func GetInterfaceNames() []string {
 	files, err := ioutil.ReadDir(sysClassNet)
 	checkError(err)
@@ -36,6 +43,8 @@ func GetInterfaceNames() []string {
 	return ret
 }
 
+// GetBridgeByName gets the details of a bridge by its name.
+// It returns the Bridge if the name is a bridge
 func GetBridgeByName(name string) (Bridge, error) {
 	bridge := Bridge{Name: name}
 	bridgeFolder := sysClassNet + name + "/bridge"
@@ -55,6 +64,8 @@ func GetBridgeByName(name string) (Bridge, error) {
 	return bridge, errors.New("not a bridge")
 }
 
+// GetAllBridges gets all bridges in the Linux.
+// It returns an array of Bridges.
 func GetAllBridges() []Bridge {
 	interfaces := GetInterfaceNames()
 	ret := []Bridge{}
